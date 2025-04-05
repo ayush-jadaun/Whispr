@@ -6,7 +6,7 @@ import helmet from "helmet";
 import hpp from "hpp"
 import cookieParser from "cookie-parser"
 import cors from "cors"
-
+import connectDb from "./db/db.ts"
 dotenv.config()
 const app= express();
 
@@ -100,6 +100,10 @@ app.use((req, res) => {
   });
 });
 
+
+connectDb().then(()=>{
+  console.log("Connection done")
+})
 
 
 
