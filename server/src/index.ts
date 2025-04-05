@@ -6,7 +6,6 @@ import helmet from "helmet";
 import hpp from "hpp"
 import cookieParser from "cookie-parser"
 import cors from "cors"
-import ExpressMongoSanitize from "express-mongo-sanitize";
 
 dotenv.config()
 const app= express();
@@ -20,11 +19,27 @@ const limiter = rateLimit({
     message:"Too many request from this IP, please try again later",
 })
 
+// because mongosanitize was not working for me i created my own custom sanitizer
+function sanitizeObject(obj: any) {
+  for (const key in obj) {
+    if (key.startsWith("$") || key.includes(".")) {
+      delete obj[key];
+    } else if (typeof obj[key] === "object") {
+      sanitizeObject(obj[key]);
+    }
+  }
+}
+function mongoSanitizeCustom(req: any, res: any, next: any) {
+  if (req.body) sanitizeObject(req.body);
+  if (req.query) sanitizeObject(req.query);
+  if (req.params) sanitizeObject(req.params);
+  next();
+}
 //security middlewares
 app.use("/api",limiter)
 app.use(helmet());
-app.use(ExpressMongoSanitize());
 app.use(hpp())
+app.use(mongoSanitizeCustom)
 
 // logging middleware (only for development)
 
